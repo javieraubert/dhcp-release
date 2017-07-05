@@ -4,9 +4,9 @@ import struct
 from uuid import getnode as get_mac
 from random import randint
 import binascii
-import netaddr
 import argparse
-
+import sys,os
+DHCP_TIMEOUT = 10
 class DHCP:
     def __init__(self):
         self.transactionID = b''
@@ -109,23 +109,24 @@ if __name__ == '__main__':
     except Exception as e:
         print('Port 68 in use...')
         dhcps.close()
-        exit(1)
+	sys.exit(os.EX_SOFTWARE)    
  
     dhcp = DHCP()	
     dhcps.sendto(dhcp.DiscoverPacket(), (args.dhcp_broadcast_ip, 67))
-    print('DHCP Discover......................\n')
-   
-    dhcps.settimeout(5)
+    dhcps.settimeout(DHCP_TIMEOUT)
+    print('DHCP Discover......................, Waiting for 10sec')
     try:
         while True:
             data = dhcps.recv(1024)
 	    dhcp.check_res(data)
 	    DHCPServerID = dhcp.getServerIdentifier()
+	    print "--------Got DHCP - Server ID-------- =>" , DHCPServerID
     	    dhcps.sendto(dhcp.ReleasePacket(args.client_ip, args.mac),(DHCPServerID, 67) ) 
-            print('DHCP Release.......................\n')
+            print('DHCP Release.......................')
+            print('Exiting!!!!')
 	    break
     except socket.timeout as e:
         print(e)
     
     dhcps.close()
-    exit(0)
+    sys.exit(os.EX_OK)   
