@@ -97,6 +97,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--client-ip', help='must be in the format xxx.yyy.zzz.aaa', required=True,action="store", dest="client_ip",type=str)
     parser.add_argument('--mac', help = 'must be in the format 00:26:9e:04:1e:9b', required=True, action="store", type=str)
+    parser.add_argument('--dhcp-broadcast-ip', help = 'must be in the dhcp broadcast', required=True, action="store", type=str)
     args = parser.parse_args()
     # Initializing Socket
     dhcps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)    #UDP
@@ -111,7 +112,7 @@ if __name__ == '__main__':
         exit(1)
  
     dhcp = DHCP()	
-    dhcps.sendto(dhcp.DiscoverPacket(), ('172.111.165.127', 67))
+    dhcps.sendto(dhcp.DiscoverPacket(), (args.dhcp_broadcast_ip, 67))
     print('DHCP Discover......................\n')
    
     dhcps.settimeout(5)
