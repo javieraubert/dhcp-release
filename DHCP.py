@@ -12,4 +12,5 @@ if __name__ == '__main__':
     parser.add_argument('--dhcp-broadcast-ip', help = 'must be in the dhcp broadcast', required=True, action="store", type=str)
     args = parser.parse_args()
     dhcp = DHCP.DHClient(args.dhcp_broadcast_ip)	
-    dhcp.SendPacket( args.client_ip, args.mac )
+    msg = dhcp.SendPacket( args.client_ip, args.mac )
+    print msg

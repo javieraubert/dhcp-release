@@ -4,6 +4,7 @@ import struct
 from uuid import getnode as get_mac
 from random import randint
 import sys,os
+import json
 
 DHCP_TIMEOUT = 10
 DHCP_CLIENT_PORT = 68
@@ -100,24 +101,27 @@ class DHClient(object):
 	return False
 
     def SendPacket(self, _virtual_address, _physical_address):
-    	self.dhcps.sendto(self.DiscoverPacket(_virtual_address, _physical_address), (self.BroadCast_IP, DHCP_SERVER_PORT))
+	res = '' 
+   	self.dhcps.sendto(self.DiscoverPacket(_virtual_address, _physical_address), (self.BroadCast_IP, DHCP_SERVER_PORT))
     	self.dhcps.settimeout(DHCP_TIMEOUT)	
-    	print('DHCP Discover......................, Waiting For 10sec')
     	try:
             while True:
             	data = self.dhcps.recv(1024)
 	    	self.CheckResponse(data)
 	    	DHCPServerID = self.getServerIdentifier()
-	        print "--------Got DHCP - Server ID-------- =>" , DHCPServerID
     	    	self.dhcps.sendto(self.ReleasePacket(_virtual_address, _physical_address),(DHCPServerID, DHCP_SERVER_PORT) ) 
-            	print('DHCP Release.......................')
-            	print('Exiting!!!!')
-	    	break
+		res = json.dumps( {'dhcp_response':
+					{'status': 'success', 'message':'DHCP Released, DHCP-Server ID: ' + str(DHCPServerID)}
+		    	    	  }	
+		  	  	) 	 
+	   	break
     	except socket.timeout as e:
-        	print(e)
-    
+		res = json.dumps( {'dhcp_response':
+					{ 'status': 'error', 'message':str(e) }
+		            	  }
+			  	)
     	self.dhcps.close()
-    	sys.exit(os.EX_OK)
+	return res
    	
     def getServerIdentifier(self):
 	_sid = self.DHCPServerIdentifier
