@@ -1,16 +1,31 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
+from scapy.all import *
 import sys
-sys.path.append('lib/') # this is where your python file exists
+from sys import stdin
 
-import DHClient as DHCP
-import argparse
-if __name__ == '__main__':
+conf.checkIPaddr=False
+#configuration
+localiface = sys.argv[1] 
+releaseMAC = sys.argv[2]
+releaseIP = sys.argv[3]
+serverIP = sys.argv[4]
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--client-ip', help='must be in the format xxx.yyy.zzz.aaa', required=True,action="store", dest="client_ip",type=str)
-    parser.add_argument('--mac', help = 'must be in the format 00:26:9e:04:1e:9b', required=True, action="store", type=str)
-    parser.add_argument('--dhcp-broadcast-ip', help = 'must be in the dhcp broadcast', required=True, action="store", type=str)
-    args = parser.parse_args()
-    dhcp = DHCP.DHClient(args.dhcp_broadcast_ip)	
-    msg = dhcp.SendPacket( args.client_ip, args.mac )
-    print msg
+def mac_to_bytes(mac_addr: str) -> bytes:
+    """ Converts a MAC address string to bytes.
+        NEED TO DO THIS BECAUSE CHADDR EXPECTS A BYTE, IF YOU PUT THE MAC DIRECTLY,
+        THEM THIS STRING IS TREATED AS BYTE, WHEN IT IS NOT BYTE, THATS WHY YOU MUST
+        SEND A BYTE.
+    """
+    return int(mac_addr.replace(":", ""), 16).to_bytes(6, "big")
+
+#releaseMAC = hex(int(releaseMAC.replace(':',''), 16))
+print (releaseMAC)
+
+releaseMACraw = mac_to_bytes(releaseMAC)
+print (releaseMACraw)
+
+#craft and send DHCP RELEASE 
+dhcp_release = IP(dst=serverIP)/UDP(sport=68,dport=67)/BOOTP(chaddr=releaseMACraw, ciaddr=releaseIP, xid=RandInt())/DHCP(options=[('message-type','release'), 'end'])
+print(BOOTP)
+send(dhcp_release)
